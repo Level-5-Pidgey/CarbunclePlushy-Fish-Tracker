@@ -451,6 +451,12 @@
       $(() => {
         // Document is ready, initialize the view model now.
         ViewModel.initialize();
+        const linkedTool = {
+          '#fish-guide': '#fish-guide-button',
+          '#testing-windows': '#testing-windows-button',
+          '#tips-and-tricks': '#tips-and-tricks-button'
+        }[window.location.hash];
+        if (linkedTool) $(linkedTool).trigger('click');
         // There shouldn't be anything more to do.  Any logic controlling the
         // display belongs in the ViewModel or Layout classes.
         // DO NOT ADD CODE AFTER THIS POINT!!!
@@ -467,6 +473,7 @@
           <i class="bars icon"></i>
           <div class="menu">
             <a class="item" target="_blank" href="fishtrain.html"><i class="train icon"></i> Fish Train Tool</a>
+            <a class="item" target="_blank" href="calendar.html"><i class="calendar alternate outline icon"></i> Big Fish Calendar</a>
             <a class="item" id="fish-guide-button"><i class="fish icon"></i> Fish Guide</a>
             <a class="item" target="_blank" href="weatherForecaster.html"><i class="cloud sun rain icon"></i> Weather Forecaster</a>
             <a class="item" id="testing-windows-button"><i class="vial icon"></i> Testing Windows</a>
