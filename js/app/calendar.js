@@ -979,7 +979,6 @@ let FishCalendar = function() {
   }
 
   function resetPlanner() {
-    clearSavedState();
     state = makeDefaultState();
     selectedFishIds = new Set();
     document.getElementById('fish-search').value = '';
