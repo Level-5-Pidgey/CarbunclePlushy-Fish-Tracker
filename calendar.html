@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Plan FFXIV big-fish windows around your weekly availability and export them to a calendar." />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <title>FFX|V Fish Tracker App: Big Fish Calendar</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.4/semantic.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.4/semantic.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore-contrib/0.3.0/underscore-contrib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dot/1.1.3/doT.min.js"></script>
+    <script src="public/js/lib/dateFns/2.25.0/dateFns.min.js?20260801_1538"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.5.2/rxjs.umd.min.js"></script>
+
+    <link rel="stylesheet" href="public/images/sprite.css?7.5_20260428_1005" />
+    <link rel="stylesheet" href="css/semantic_ui_overrides.css?20260625_2159" />
+    <link rel="stylesheet" href="css/overlay.css?20260801_1940" />
+    <link rel="stylesheet" href="css/dark_overlay.css?20260414_2133" />
+    <link rel="stylesheet" href="css/calendar.css?20260822_6" />
+
+    <script>window.ALLOW_MULTI_BAIT = false;</script>
+    <script src="js/app/localization.js?20111013_2022"></script>
+    <script src="js/app/data.js?7.55_20260812_2240"></script>
+    <script src="js/app/data_ex.js?20240227_1941"></script>
+    <script src="js/app/time.js?20111013_2022"></script>
+    <script src="js/app/fish.js?20260627_2315"></script>
+    <script src="js/app/weather.js?20260502_1420"></script>
+    <script src="js/app/fishwatcher.js?20240313_1943"></script>
+    <script src="js/app/templates.js?20260625_2159"></script>
+  </head>
+  <body class="dark">
+    <div id="topmenu" class="ui text top fixed menu">
+      <div class="ui container">
+        <div class="ui dropdown icon item" id="main-menu">
+          <i class="bars icon"></i>
+          <div class="menu">
+            <a class="item" target="_blank" href="fishtrain.html"><i class="train icon"></i> Fish Train Tool</a>
+            <a class="active item" href="calendar.html"><i class="calendar alternate outline icon"></i> Big Fish Calendar</a>
+            <a class="item" href="index.html#fish-guide"><i class="fish icon"></i> Fish Guide</a>
+            <a class="item" target="_blank" href="weatherForecaster.html"><i class="cloud sun rain icon"></i> Weather Forecaster</a>
+            <a class="item" href="index.html#testing-windows"><i class="vial icon"></i> Testing Windows</a>
+            <a class="item" href="index.html#tips-and-tricks"><i class="lightbulb icon"></i> Tips and Tricks</a>
+            <a class="item" target="_blank" href="feedback.html"><i class="comment outline icon"></i> Feedback</a>
+          </div>
+        </div>
+        <div class="header item">FFX|V Fish Tracker App</div>
+        <div class="ui right borderless menu">
+          <div class="item" id="eorzeaClock" title="Eorzea Time">##:##</div>
+          <div class="link icon item" id="settings-button" title="Advanced Settings" aria-label="Advanced Settings"><i class="cogs icon"></i></div>
+          <div class="item" id="theme-toggle" title="Toggle theme">
+            <span class="toggle dark-mode-toggle" data-theme="dark">🌙</span>
+            <span class="toggle light-mode-toggle" data-theme="light">☀️</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <main class="ui main container calendar-page">
+      <div class="page-title-row">
+        <div>
+          <h1>Big Fish Calendar</h1>
+          <p>Put future fishing windows into your calendar based on your weekly availability. Downloads an .ics file with all fish selected.
+          <br/>The fish lists respect your expansion settings from the settings menu (⚙️) in the header.
+          </p>
+        </div>
+        <div class="ui circular label"><span id="fish-count">0 selected</span></div>
+      </div>
+
+      <div class="ui stackable grid planner-grid">
+        <section class="six wide column" aria-labelledby="fish-heading">
+          <div class="ui segment planner-segment fish-picker">
+            <div class="segment-heading">
+              <h2 id="fish-heading" class="ui header">Big fish</h2>
+            </div>
+            <div class="ui fluid icon input fish-search-input">
+              <input id="fish-search" type="search" placeholder="Search fish or location" autocomplete="off" />
+              <i class="search icon"></i>
+            </div>
+            <div class="ui mini buttons fish-list-actions">
+              <button id="select-visible" class="ui button" type="button">Select visible</button>
+              <button id="clear-fish" class="ui button" type="button">Clear</button>
+            </div>
+            <div id="fish-list" class="fish-list" role="group" aria-label="Big fish choices"></div>
+          </div>
+        </section>
+
+        <section class="ten wide column" aria-labelledby="hours-heading">
+          <div class="ui segment planner-segment availability-picker">
+            <div class="segment-heading">
+              <h2 id="hours-heading" class="ui header">Available hours</h2>
+              <div class="ui mini icon buttons">
+                <button id="preset-evenings" class="ui button" type="button" title="Weekday evenings" aria-label="Set weekday evenings"><i class="moon icon"></i></button>
+                <button id="clear-hours" class="ui button" type="button" title="Clear availability" aria-label="Clear availability"><i class="eraser icon"></i></button>
+              </div>
+            </div>
+            <div class="schedule-axis" aria-hidden="true"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>12a</span></div>
+            <div id="schedule-editor" class="schedule-editor" aria-label="Weekly availability in 30 minute slots"></div>
+            <div class="schedule-legend"><span class="slot-swatch"></span> Drag to paint 30-minute slots</div>
+          </div>
+
+          <div class="ui segment planner-segment export-panel" aria-labelledby="export-heading">
+            <h2 id="export-heading" class="ui header">Calendar file</h2>
+            <div class="ui form"><div class="three fields">
+              <div class="field"><label for="end-date">Calculate through</label><div class="ui calendar" id="end-date-calendar"><div class="ui input left icon"><i class="calendar icon"></i><input id="end-date" type="text" autocomplete="off" /></div></div></div>
+              <div class="field"><label for="reminder-minutes">Reminder</label><select id="reminder-minutes" class="ui dropdown">
+                <option value="">None</option><option value="5">5 minutes</option><option value="10">10 minutes</option>
+                <option value="15" selected>15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option>
+              </select></div>
+              <div class="field action-field"><label>&nbsp;</label><button id="generate-events" class="ui primary fluid labeled icon button" type="button"><i class="search icon"></i>Find windows</button></div>
+            </div></div>
+            <div id="validation-message" class="ui negative message" role="alert" hidden></div>
+            <div class="export-footer"><div id="calculation-status" role="status" aria-live="polite"></div><button id="reset-planner" class="ui mini basic button" type="button">Clear</button></div>
+          </div>
+        </section>
+      </div>
+
+      <section id="results-panel" class="ui segment planner-segment results-panel" aria-labelledby="results-heading" hidden>
+        <div class="segment-heading">
+          <div><h2 id="results-heading" class="ui header">Matching windows</h2><div id="results-summary" class="results-summary"></div></div>
+          <button id="download-calendar" class="ui positive labeled icon button" type="button" disabled><i class="download icon"></i>Download .ics</button>
+        </div>
+        <div id="results-timeline" class="results-timeline"></div>
+        <details id="no-match-details" class="no-match-details" hidden><summary>Fish without a complete window</summary><ul id="no-match-list"></ul></details>
+        <div class="ui tiny warning message import-warning">Importing another file may duplicate existing events.</div>
+      </section>
+    </main>
+
+    <div id="advanced-settings-modal" class="ui small modal">
+      <i class="close icon"></i><div class="header">Advanced Settings</div>
+      <div class="content"><div class="ui form">
+        <div class="field" id="filterPatch"><label>Filter by Expansion or Patch:</label><expansionSelectors></expansionSelectors></div>
+        <div class="field"><div class="ui checkbox" id="filterHideAlwaysAvailable"><input id="hide-always" type="checkbox" /><label for="hide-always">Hide Always Available</label></div></div>
+      </div></div>
+      <div class="actions"><button id="reset-filters" class="ui button" type="button">Show all</button><button class="ui positive approve button" type="button">Done</button></div>
+    </div>
+
+    <script src="js/app/calendar.js?20260822_5"></script>
+  </body>
+</html>
