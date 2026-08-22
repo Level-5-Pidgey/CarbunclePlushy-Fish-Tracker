@@ -1,6 +1,5 @@
-(function () {
-  'use strict';
 
+let FishCalendar = function() {
   const STORAGE_KEY = 'ffxivFishCalendarPlanner.v1';
   const MAX_HORIZON_DAYS = 365;
   const DEFAULT_HORIZON_DAYS = 30;
@@ -66,8 +65,8 @@
 
     if (Array.isArray(rawState.selectedFishIds)) {
       next.selectedFishIds = rawState.selectedFishIds
-        .map(Number)
-        .filter(id => catalogById.has(id) && !catalogById.get(id).alwaysAvailable);
+          .map(Number)
+          .filter(id => catalogById.has(id) && !catalogById.get(id).alwaysAvailable);
     }
 
     if (rawState.schedule && typeof rawState.schedule === 'object') {
@@ -77,8 +76,8 @@
         next.schedule[day].allDay = savedDay.allDay === true;
         if (Array.isArray(savedDay.blocks)) {
           next.schedule[day].blocks = savedDay.blocks
-            .filter(block => block && isTimeValue(block.start) && isTimeValue(block.end))
-            .map(block => ({ start: block.start, end: block.end }));
+              .filter(block => block && isTimeValue(block.start) && isTimeValue(block.end))
+              .map(block => ({ start: block.start, end: block.end }));
         }
       }
     }
@@ -162,10 +161,10 @@
         fish.catchableRanges = [];
         fish.incompleteRanges = [];
         const weatherIterator = calculationWeatherService.findWeatherPattern(
-          baseEorzea,
-          fish.location.zoneId,
-          fish.previousWeatherSet,
-          fish.weatherSet
+            baseEorzea,
+            fish.location.zoneId,
+            fish.previousWeatherSet,
+            fish.weatherSet
         );
 
         let yieldedPeriods = 0;
@@ -183,11 +182,11 @@
         calculationWeatherService.finishedWithIter();
 
         const earthRanges = fish.catchableRanges
-          .map(range => ({
-            start: eorzeaTime.toEarth(+range.start),
-            end: eorzeaTime.toEarth(+range.end)
-          }))
-          .filter(range => range.end > startEarth && range.start < endEarth);
+            .map(range => ({
+              start: eorzeaTime.toEarth(+range.start),
+              end: eorzeaTime.toEarth(+range.end)
+            }))
+            .filter(range => range.end > startEarth && range.start < endEarth);
         rangesByFishId.set(fish.id, earthRanges);
 
         if (typeof onProgress === 'function') {
@@ -314,8 +313,8 @@
     const locationParts = [fish.location.zoneName, fish.location.name].filter(Boolean);
     const description = [
       'Eorzea time: ' + (fish.startHour === 0 && fish.endHour === 24
-        ? 'All day'
-        : formatEorzeaHour(fish.startHour) + '-' + formatEorzeaHour(fish.endHour) + ' ET'),
+          ? 'All day'
+          : formatEorzeaHour(fish.startHour) + '-' + formatEorzeaHour(fish.endHour) + ' ET'),
       'Weather: ' + describeWeather(fish)
     ];
     const bait = describeBait(fish);
@@ -338,15 +337,15 @@
   /** Generate strict full-fit planner events from a PlannerRequest. */
   async function generatePlannerEvents(request, onProgress) {
     const availability = expandWeeklyAvailability(
-      request.weeklyAvailability,
-      request.generatedAtMs,
-      request.endEarthMs
+        request.weeklyAvailability,
+        request.generatedAtMs,
+        request.endEarthMs
     );
     const calculation = await calculateFishRangesUntil(
-      request.fishIds,
-      request.generatedAtMs,
-      request.endEarthMs,
-      onProgress
+        request.fishIds,
+        request.generatedAtMs,
+        request.endEarthMs,
+        onProgress
     );
     const events = [];
     const matchedIds = new Set();
@@ -364,10 +363,10 @@
 
     events.sort((a, b) => a.start - b.start || a.fishName.localeCompare(b.fishName));
     const noMatchFish = request.fishIds
-      .filter(id => !matchedIds.has(id))
-      .map(id => calculation.fishById.get(id))
-      .filter(Boolean)
-      .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(id => !matchedIds.has(id))
+        .map(id => calculation.fishById.get(id))
+        .filter(Boolean)
+        .sort((a, b) => a.name.localeCompare(b.name));
     return { events: events, noMatchFish: noMatchFish };
   }
 
@@ -377,10 +376,10 @@
 
   function escapeCalendarText(value) {
     return String(value)
-      .replace(/\\/g, '\\\\')
-      .replace(/\r?\n/g, '\\n')
-      .replace(/;/g, '\\;')
-      .replace(/,/g, '\\,');
+        .replace(/\\/g, '\\\\')
+        .replace(/\r?\n/g, '\\n')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,');
   }
 
   function foldCalendarLine(line) {
@@ -406,8 +405,8 @@
   /** Serialize PlannerEvent objects to one RFC 5545-style iCalendar file. */
   function serializeICalendar(events, options) {
     const reminderMinutes = options && REMINDER_OPTIONS.includes(options.reminderMinutes)
-      ? options.reminderMinutes
-      : null;
+        ? options.reminderMinutes
+        : null;
     const generatedAt = options && options.generatedAtMs ? options.generatedAtMs : Date.now();
     const lines = [
       'BEGIN:VCALENDAR',
@@ -497,7 +496,7 @@
       patch.textContent = fish.patch;
       const uptime = document.createElement('span');
       uptime.innerHTML = '<b>Uptime:</b>&nbsp;<span class="fish-availability-uptime">' +
-        (fish.uptime() * 100).toFixed(1) + '</span>%';
+          (fish.uptime() * 100).toFixed(1) + '</span>%';
       details.append(patch, uptime);
       text.append(name, details);
 
@@ -657,7 +656,7 @@
 
   function allPatches() {
     return Array.from(new Set(catalog.map(fish => normalizePatchValue(fish.patch))))
-      .sort((a, b) => Number(a) - Number(b));
+        .sort((a, b) => Number(a) - Number(b));
   }
 
   function normalizePatchValue(patch) {
@@ -706,7 +705,7 @@
     state.theme = theme;
     document.body.classList.toggle('dark', theme === 'dark');
     document.querySelectorAll('.ui.menu, .ui.modal, .ui.container, .ui.form, .ui.segment, .ui.dropdown, .ui.input')
-      .forEach(element => element.classList.toggle('inverted', theme === 'dark'));
+        .forEach(element => element.classList.toggle('inverted', theme === 'dark'));
     if (persist !== false) saveState();
   }
 
@@ -809,9 +808,9 @@
       timeline.append(empty);
     } else {
       const availability = expandWeeklyAvailability(
-        state.schedule,
-        generatedAtMs,
-        parseEndDateToExclusiveTimestamp(state.endDate)
+          state.schedule,
+          generatedAtMs,
+          parseEndDateToExclusiveTimestamp(state.endDate)
       );
       const groupsByKey = new Map();
       result.events.forEach(event => {
@@ -842,12 +841,12 @@
         const intervalStartDate = new Date(group.interval.start);
         const intervalEndDate = new Date(group.interval.end);
         const isAllDay = intervalStartDate.getHours() === 0 && intervalStartDate.getMinutes() === 0 &&
-          intervalEndDate.getHours() === 0 && intervalEndDate.getMinutes() === 0 &&
-          group.interval.end - group.interval.start >= 23 * 60 * 60 * 1000 &&
-          group.interval.end - group.interval.start <= 25 * 60 * 60 * 1000;
+            intervalEndDate.getHours() === 0 && intervalEndDate.getMinutes() === 0 &&
+            group.interval.end - group.interval.start >= 23 * 60 * 60 * 1000 &&
+            group.interval.end - group.interval.start <= 25 * 60 * 60 * 1000;
         range.textContent = isAllDay
-          ? 'All day'
-          : timeFormatter.format(intervalStartDate) + ' – ' + timeFormatter.format(intervalEndDate);
+            ? 'All day'
+            : timeFormatter.format(intervalStartDate) + ' – ' + timeFormatter.format(intervalEndDate);
         heading.append(date, range);
 
         const table = document.createElement('div');
@@ -886,8 +885,8 @@
           track.className = 'window-track';
           const bar = document.createElement('div');
           bar.className = 'window-bar';
-          bar.style.left = ((event.start - group.interval.start) / duration * 100) + '%';
-          bar.style.width = ((event.end - event.start) / duration * 100) + '%';
+          bar.style.setProperty('--window-start', ((event.start - group.interval.start) / duration * 100) + '%');
+          bar.style.setProperty('--window-duration', ((event.end - event.start) / duration * 100) + '%');
           bar.title = event.fishName + '\n' + timeFormatter.format(new Date(event.start)) + ' – ' + timeFormatter.format(new Date(event.end)) + '\n' + event.location;
           const barIcon = icon.cloneNode(false);
           const barTime = document.createElement('span');
@@ -909,8 +908,8 @@
     }
     noMatchDetails.hidden = result.noMatchFish.length === 0;
     document.getElementById('results-summary').textContent = result.events.length + ' event' +
-      (result.events.length === 1 ? '' : 's') + ' across ' +
-      new Set(result.events.map(event => event.fishId)).size + ' fish';
+        (result.events.length === 1 ? '' : 's') + ' across ' +
+        new Set(result.events.map(event => event.fishId)).size + ' fish';
     document.getElementById('download-calendar').disabled = result.events.length === 0;
     panel.hidden = false;
     panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
@@ -949,8 +948,8 @@
       });
       generatedEvents = result.events;
       status.textContent = result.events.length === 0
-        ? 'Forecast complete. No windows met the full-fit rule.'
-        : 'Forecast complete. Review the windows below.';
+          ? 'Forecast complete. No windows met the full-fit rule.'
+          : 'Forecast complete. Review the windows below.';
       renderResults(result, generatedAtMs);
     } catch (error) {
       console.error(error);
@@ -998,8 +997,8 @@
 
   function initialize() {
     catalog = Fishes
-      .filter(fish => fish.bigFish)
-      .sort((a, b) => a.name.localeCompare(b.name));
+        .filter(fish => fish.bigFish)
+        .sort((a, b) => a.name.localeCompare(b.name));
     catalogById = new Map(catalog.map(fish => [fish.id, fish]));
     state = loadState();
     selectedFishIds = new Set(state.selectedFishIds);
@@ -1013,8 +1012,8 @@
     initializeEndDatePicker();
     syncSharedPatchFilter();
     document.getElementById('reminder-minutes').value = state.reminderMinutes === null
-      ? ''
-      : String(state.reminderMinutes);
+        ? ''
+        : String(state.reminderMinutes);
 
     document.getElementById('fish-search').addEventListener('input', filterFishList);
     document.getElementById('select-visible').addEventListener('click', () => {
@@ -1106,11 +1105,11 @@
     window.setInterval(updateEorzeaClock, 1000);
   }
 
-  window.FishCalendarPlanner = {
+  initialize();
+
+  return {
     calculateFishRangesUntil: calculateFishRangesUntil,
     generatePlannerEvents: generatePlannerEvents,
     serializeICalendar: serializeICalendar
   };
-
-  initialize();
-})();
+}();
