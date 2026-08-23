@@ -1163,7 +1163,7 @@ body.calendar-planner-page {
 
 body.calendar-planner-page { touch-action: manipulation; }
 body.calendar-planner-page .calendar-page { padding-bottom: 4rem; }
-body.calendar-planner-page .calendar-page > .page-title-row { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+body.calendar-planner-page .calendar-page > .page-title-row { display: flex; align-items: end; gap: 1rem; margin-bottom: 1rem; }
 body.calendar-planner-page .page-title-row h1 { margin-bottom: .2rem; }
 body.calendar-planner-page .page-title-row p { margin: 0; opacity: .72; }
 body.calendar-planner-page .planner-grid.ui.grid { margin-top: 0; }
@@ -1207,7 +1207,6 @@ body.calendar-planner-page .schedule-legend { margin: .65rem 0 0 6.7rem; font-si
 body.calendar-planner-page .slot-swatch { display: inline-block; width: 1.2rem; height: .65rem; margin-right: .35rem; border-radius: 2px; background: var(--calendar-slot); }
 
 body.calendar-planner-page .export-panel { margin-top: 1rem !important; }
-body.calendar-planner-page .export-panel > .ui.header { margin-bottom: 1rem; }
 body.calendar-planner-page .action-field .button { white-space: nowrap; }
 body.calendar-planner-page .export-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 2rem; font-size: .85rem; opacity: .82; }
 body.calendar-planner-page #validation-message[hidden], body.calendar-planner-page #results-panel[hidden] { display: none !important; }
@@ -1245,7 +1244,6 @@ body.calendar-planner-page .import-warning { margin: 0 0 1rem !important; }
 body.calendar-planner-page.dark .planner-segment.ui.segment, body.calendar-planner-page.dark .window-table-head { background-color: #2f3032; }
 body.calendar-planner-page.dark .planner-segment h2.ui.header,
 body.calendar-planner-page.dark .planner-segment h2.ui.header .content { color: rgba(255,255,255,.9) !important; }
-body.calendar-planner-page.dark .export-footer .ui.basic.button { color: rgba(255,255,255,.75) !important; box-shadow: 0 0 0 1px rgba(255,255,255,.28) inset !important; }
 body.calendar-planner-page.dark .calendar-page .ui.input > input,
 body.calendar-planner-page.dark .calendar-page .ui.form input[type="text"],
 body.calendar-planner-page.dark .calendar-page input[type="search"] { background-color: #1b1c1d !important; color: hsl(0, 0%, 90%) !important; border: 1px solid hsla(0, 0%, 90%, .15) !important; }
@@ -1253,12 +1251,17 @@ body.calendar-planner-page.dark .calendar-page .ui.input > input:focus,
 body.calendar-planner-page.dark .calendar-page .ui.form input[type="text"]:focus,
 body.calendar-planner-page.dark .calendar-page input[type="search"]:focus { background-color: #1b1c1d !important; color: white !important; border-color: rgba(255,255,255,.35) !important; }
 body.calendar-planner-page.dark .calendar-page .ui.input > .icon { color: rgba(255,255,255,.65); }
+body.calendar-planner-page.dark #end-date-calendar .ui.popup::before { background-color: #2b2b2b !important; box-shadow: none !important; }
 body.calendar-planner-page.dark .time-slot.is-selected { background: green; }
 body.calendar-planner-page.dark .time-slot:nth-child(12n) { border-right-color: rgba(255,255,255,.7); }
 body.calendar-planner-page.dark .window-track { background-image: repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 4px, transparent 4px 8px); }
 body.calendar-planner-page.dark .window-track::before { background: hsl(0, 0%, 25%); }
 body.calendar-planner-page.dark .window-bar { border-color: #111; background: hsl(0, 0%, 40%); }
 body.calendar-planner-page.dark .fish-intuition { color: #e6b95c; }
+
+@media (min-width: 768px) {
+  body.calendar-planner-page .planner-grid > section:nth-child(2) .availability-picker { min-height: 30.5rem; }
+}
 
 @media (min-width: 768px) and (max-width: 1199px) {
   body.calendar-planner-page .schedule-row { grid-template-columns: 4.5rem 1.7rem minmax(18rem, 1fr); }
