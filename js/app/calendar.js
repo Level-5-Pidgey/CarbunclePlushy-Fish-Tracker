@@ -800,6 +800,7 @@ let FishCalendar = function() {
 
     const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
     const timeFormatter = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
+    const formatTime = date => timeFormatter.format(date).replace(/\s?(am|pm)$/i, (_, period) => ' ' + period.toUpperCase());
 
     if (result.events.length === 0) {
       const empty = document.createElement('div');
@@ -846,7 +847,7 @@ let FishCalendar = function() {
             group.interval.end - group.interval.start <= 25 * 60 * 60 * 1000;
         range.textContent = isAllDay
             ? 'All day'
-            : timeFormatter.format(intervalStartDate) + ' – ' + timeFormatter.format(intervalEndDate);
+            : formatTime(intervalStartDate) + ' – ' + formatTime(intervalEndDate);
         heading.append(date, range);
 
         const table = document.createElement('div');
@@ -861,39 +862,50 @@ let FishCalendar = function() {
         const duration = group.interval.end - group.interval.start;
         [0, .25, .5, .75, 1].forEach(position => {
           const label = document.createElement('span');
-          label.textContent = timeFormatter.format(new Date(group.interval.start + duration * position));
+          label.textContent = formatTime(new Date(group.interval.start + duration * position));
           axisLabels.append(label);
         });
         axis.append(axisLabels);
         table.append(fishHead, axis);
 
-        group.events.sort((a, b) => a.start - b.start || a.fishName.localeCompare(b.fishName)).forEach(event => {
-          const fish = catalogById.get(Number(event.fishId));
+        const eventsByFish = new Map();
+        group.events.forEach(event => {
+          const fishId = Number(event.fishId);
+          if (!eventsByFish.has(fishId)) eventsByFish.set(fishId, []);
+          eventsByFish.get(fishId).push(event);
+        });
+        Array.from(eventsByFish.entries())
+            .sort(([, first], [, second]) => first[0].start - second[0].start || first[0].fishName.localeCompare(second[0].fishName))
+            .forEach(([fishId, events]) => {
+          const fish = catalogById.get(fishId);
           const fishCell = document.createElement('div');
           fishCell.className = 'window-fish';
           const icon = document.createElement('div');
           icon.className = 'ui middle aligned fish-icon sprite-icon sprite-icon-fish_n_tackle-' + fish.icon;
           const text = document.createElement('div');
           const name = document.createElement('strong');
-          name.textContent = event.fishName;
+          name.textContent = events[0].fishName;
           const location = document.createElement('small');
-          location.textContent = event.location || 'Location unavailable';
+          location.textContent = events[0].location || 'Location unavailable';
           text.append(name, location);
           fishCell.append(icon, text);
 
           const track = document.createElement('div');
           track.className = 'window-track';
-          const bar = document.createElement('div');
-          bar.className = 'window-bar';
-          bar.style.setProperty('--window-start', ((event.start - group.interval.start) / duration * 100) + '%');
-          bar.style.setProperty('--window-duration', ((event.end - event.start) / duration * 100) + '%');
-          bar.title = event.fishName + '\n' + timeFormatter.format(new Date(event.start)) + ' – ' + timeFormatter.format(new Date(event.end)) + '\n' + event.location;
-          const barIcon = icon.cloneNode(false);
-          const barTime = document.createElement('span');
-          barTime.className = 'window-bar-time';
-          barTime.textContent = timeFormatter.format(new Date(event.start)) + '–' + timeFormatter.format(new Date(event.end));
-          bar.append(barIcon, barTime);
-          track.append(bar);
+          events.sort((a, b) => a.start - b.start).forEach(event => {
+            const bar = document.createElement('div');
+            bar.className = 'window-bar';
+            bar.style.setProperty('--window-start', ((event.start - group.interval.start) / duration * 100) + '%');
+            bar.style.setProperty('--window-duration', ((event.end - event.start) / duration * 100) + '%');
+            const windowLabel = event.fishName + ', ' + formatTime(new Date(event.start)) + ' to ' +
+                formatTime(new Date(event.end)) + ', ' + event.location;
+            bar.title = windowLabel;
+            bar.setAttribute('aria-label', windowLabel);
+            bar.tabIndex = 0;
+            const barIcon = icon.cloneNode(false);
+            bar.append(barIcon);
+            track.append(bar);
+          });
           table.append(fishCell, track);
         });
         section.append(heading, table);
