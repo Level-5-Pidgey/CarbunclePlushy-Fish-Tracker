@@ -796,11 +796,14 @@ let FishCalendar = function() {
     uptimeWatcher.updateFishes({ earthTime: Date.now() });
   }
 
-  function setTheme(theme, persist) {
+  function setTheme(theme, persist, refreshCalendar = true) {
     state.theme = theme;
     document.body.classList.toggle('dark', theme === 'dark');
     document.querySelectorAll('.ui.menu, .ui.modal, .ui.container, .ui.form, .ui.segment, .ui.dropdown, .ui.input')
         .forEach(element => element.classList.toggle('inverted', theme === 'dark'));
+    document.querySelectorAll('.ui.calendar')
+        .forEach(element => element.classList.toggle('inverted', theme === 'dark'));
+    if (refreshCalendar && document.getElementById('end-date-calendar')) initializeEndDatePicker();
     if (persist !== false) saveState();
   }
 
@@ -1172,7 +1175,7 @@ let FishCalendar = function() {
     Templates.applyTemplates();
     $('.ui.checkbox').checkbox();
     initializeCatalogUptimes();
-    setTheme(state.theme, false);
+    setTheme(state.theme, false, false);
 
     renderFishList();
     renderSchedule();
