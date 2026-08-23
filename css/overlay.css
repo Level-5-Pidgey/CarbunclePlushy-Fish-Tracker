@@ -1292,7 +1292,7 @@ body.calendar-planner-page .window-bar-time { display: none; }
 body.calendar-planner-page .empty-results { padding: 2rem; text-align: center; opacity: .7; }
 body.calendar-planner-page .no-match-details { margin-top: 1rem; }
 body.calendar-planner-page .no-match-details ul { columns: 3; }
-body.calendar-planner-page .import-warning { margin-top: 1rem !important; }
+body.calendar-planner-page .import-warning { margin: 0 0 1rem !important; }
 
 body.calendar-planner-page.dark .planner-segment.ui.segment, body.calendar-planner-page.dark .window-table-head { background-color: #2f3032; }
 body.calendar-planner-page.dark .planner-segment h2.ui.header,
