@@ -1272,6 +1272,8 @@ body.calendar-planner-page #validation-message ul { margin: 0; padding-left: 1.2
 
 body.calendar-planner-page .results-panel { margin-top: 1rem !important; }
 body.calendar-planner-page .results-summary { margin-top: .2rem; opacity: .7; }
+body.calendar-planner-page .results-filters { margin-bottom: 1rem; }
+body.calendar-planner-page .results-filters[hidden] { display: none; }
 body.calendar-planner-page .availability-group { margin: 1rem 0 1.5rem; }
 body.calendar-planner-page .availability-group-heading { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; font-weight: 700; }
 body.calendar-planner-page .availability-group-heading span:last-child { font-weight: 400; opacity: .7; }
@@ -1281,7 +1283,8 @@ body.calendar-planner-page .window-fish, body.calendar-planner-page .window-trac
 body.calendar-planner-page .window-table-head { display: flex; align-items: center; padding: .45rem .7rem; font-weight: 700; background: rgba(127,127,127,.08); }
 body.calendar-planner-page .window-axis { position: relative; min-width: 34rem; }
 body.calendar-planner-page .window-axis-labels { position: absolute; inset: .6rem .5rem auto; display: flex; justify-content: space-between; font-size: .72rem; font-weight: 700; opacity: .82; }
-body.calendar-planner-page .window-fish { display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; padding: .2rem .7rem; }
+body.calendar-planner-page .window-fish { display: grid; grid-template-columns: 1.25rem 28px minmax(0,1fr); align-items: center; padding: .2rem .7rem; }
+body.calendar-planner-page .window-row-checkbox { margin: 0; }
 body.calendar-planner-page .window-fish .fish-icon { width: 44px; height: 44px; margin: -11px; transform: scale(.5); }
 body.calendar-planner-page .window-fish small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .65; }
 body.calendar-planner-page .window-track { background-image: repeating-linear-gradient(to bottom, rgba(127,127,127,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(127,127,127,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(127,127,127,.55) 0 4px, transparent 4px 8px); background-position: 25% 0, 50% 0, 75% 0; background-repeat: no-repeat; background-size: 1px 100%; }
@@ -1289,6 +1292,7 @@ body.calendar-planner-page .window-track { position: relative; min-width: 34rem;
 body.calendar-planner-page .window-track::before { content: ''; position: absolute; left: 0; right: 0; top: calc(50% - 2px); height: 4px; border-radius: 2px; background: hsl(0, 0%, 85%); }
 body.calendar-planner-page .window-bar { position: absolute; z-index: 1; top: .4rem; left: min(var(--window-start), calc(100% - 3rem)); width: max(var(--window-duration), 3rem); height: 2.55rem; box-sizing: border-box; border: 1px solid rgba(0,0,0,.55); border-radius: 4px; background: hsl(0, 0%, 75%); cursor: help; }
 body.calendar-planner-page .window-bar .fish-icon { position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%) scale(.7); }
+body.calendar-planner-page .window-fish.is-excluded > :not(.window-row-checkbox), body.calendar-planner-page .window-track.is-excluded .window-bar { opacity: .3; }
 body.calendar-planner-page .empty-results { padding: 2rem; text-align: center; opacity: .7; }
 body.calendar-planner-page .no-match-details { margin-top: 1rem; }
 body.calendar-planner-page .no-match-details ul { columns: 3; }
