@@ -20,7 +20,7 @@
 
     <link rel="stylesheet" href="public/images/sprite.css?7.5_20260428_1005" />
     <link rel="stylesheet" href="css/semantic_ui_overrides.css?20260625_2159" />
-    <link rel="stylesheet" href="css/overlay.css?20260823_8" />
+    <link rel="stylesheet" href="css/overlay.css?20260823_13" />
     <link rel="stylesheet" href="css/dark_overlay.css?20260414_2133" />
 
     <script>window.ALLOW_MULTI_BAIT = false;</script>
@@ -68,14 +68,14 @@
           <br/>The fish lists respect your expansion settings from the settings menu (⚙️) in the header.
           </p>
         </div>
-        <div class="ui circular label"><span id="fish-count">0 selected</span></div>
       </div>
 
       <div class="ui stackable grid planner-grid">
         <section class="six wide column" aria-labelledby="fish-heading">
           <div class="ui segment planner-segment fish-picker">
             <div class="segment-heading">
-              <h2 id="fish-heading" class="ui header">Big fish</h2>
+              <h2 id="fish-heading" class="ui header">Fish List</h2>
+              <div class="ui circular label"><span id="fish-count">0 selected</span></div>
             </div>
             <div class="ui fluid icon input fish-search-input">
               <input id="fish-search" type="search" placeholder="Search fish or location" autocomplete="off" />
@@ -85,7 +85,7 @@
               <button id="select-visible" class="ui button" type="button">Select visible</button>
               <button id="clear-fish" class="ui button" type="button">Clear</button>
             </div>
-            <div id="fish-list" class="fish-list" role="group" aria-label="Big fish choices"></div>
+            <div id="fish-list" class="fish-list" role="group" aria-label="Fish list choices"></div>
           </div>
         </section>
 
@@ -104,7 +104,10 @@
           </div>
 
           <div class="ui segment planner-segment export-panel" aria-labelledby="export-heading">
-            <h2 id="export-heading" class="ui header">Calendar file</h2>
+            <div class="segment-heading">
+              <h2 id="export-heading" class="ui header">Calendar</h2>
+              <button id="reset-planner" class="ui mini button" type="button">Clear</button>
+            </div>
             <div class="ui form"><div class="three fields">
               <div class="field"><label for="end-date">Calculate through</label><div class="ui calendar" id="end-date-calendar"><div class="ui input left icon"><i class="calendar icon"></i><input id="end-date" type="text" autocomplete="off" /></div></div></div>
               <div class="field"><label for="reminder-minutes">Reminder</label><select id="reminder-minutes" class="ui dropdown">
@@ -114,7 +117,7 @@
               <div class="field action-field"><label>&nbsp;</label><button id="generate-events" class="ui primary fluid labeled icon button" type="button"><i class="search icon"></i>Find windows</button></div>
             </div></div>
             <div id="validation-message" class="ui negative message" role="alert" hidden></div>
-            <div class="export-footer"><div id="calculation-status" role="status" aria-live="polite"></div><button id="reset-planner" class="ui mini basic button" type="button">Clear</button></div>
+            <div class="export-footer"><div id="calculation-status" role="status" aria-live="polite"></div></div>
           </div>
         </section>
       </div>
@@ -140,6 +143,6 @@
       <div class="actions"><button id="reset-filters" class="ui button" type="button">Show all</button><button class="ui positive approve button" type="button">Done</button></div>
     </div>
 
-    <script src="js/app/calendar.js?20260823_7"></script>
+    <script src="js/app/calendar.js?20260823_8"></script>
   </body>
 </html>
