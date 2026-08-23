@@ -17,6 +17,22 @@ let FishCalendar = function() {
   let scheduleSlots = null;
   let dragSelection = null;
 
+  class CalendarFishWatcher extends FishWatcher {
+    constructor() {
+      super();
+      this.observedAttempts = [];
+    }
+
+    startObserving() {
+      this.observedAttempts = [];
+      return this.observedAttempts;
+    }
+
+    onCatchableRangeResolved(details) {
+      this.observedAttempts.push(details);
+    }
+  }
+
   function pad2(value) {
     return String(value).padStart(2, '0');
   }
@@ -146,7 +162,7 @@ let FishCalendar = function() {
     const rangesByFishId = new Map();
     const originalWeatherService = weatherService;
     const calculationWeatherService = new WeatherService();
-    const watcher = new FishWatcher();
+    const watcher = new CalendarFishWatcher();
     const baseEorzea = eorzeaTime.toEorzea(startEarth);
     const cutoffEorzea = eorzeaTime.toEorzea(endEarth);
 
@@ -161,6 +177,7 @@ let FishCalendar = function() {
 
         fish.catchableRanges = [];
         fish.incompleteRanges = [];
+        const observedAttempts = watcher.startObserving();
         const weatherIterator = calculationWeatherService.findWeatherPattern(
             baseEorzea,
             fish.location.zoneId,
@@ -183,10 +200,44 @@ let FishCalendar = function() {
         calculationWeatherService.finishedWithIter();
 
         const earthRanges = fish.catchableRanges
-            .map(range => ({
-              start: eorzeaTime.toEarth(+range.start),
-              end: eorzeaTime.toEarth(+range.end)
-            }))
+            .map(range => {
+              const observations = observedAttempts.filter(observation =>
+                +observation.targetRange.end > +range.start &&
+                +observation.targetRange.start < +range.end
+              );
+              const preparationStart = observations.reduce(
+                  (earliest, observation) => Math.min(earliest, +observation.preparationStart),
+                  +range.start
+              );
+              const prerequisites = fish.intuitionFish.map(intuitionFish => {
+                const matching = observations
+                    .flatMap(observation => observation.prerequisites)
+                    .filter(prerequisite => prerequisite.fish.id === intuitionFish.data.id);
+                const acceptedRanges = matching
+                    .filter(prerequisite => prerequisite.range !== null)
+                    .map(prerequisite => ({
+                      start: eorzeaTime.toEarth(+prerequisite.range.start),
+                      end: eorzeaTime.toEarth(+prerequisite.range.end)
+                    }));
+                return {
+                  fishId: intuitionFish.data.id,
+                  name: intuitionFish.data.name,
+                  count: intuitionFish.count,
+                  startHour: intuitionFish.data.startHour,
+                  endHour: intuitionFish.data.endHour,
+                  weather: describeWeather(intuitionFish.data),
+                  alwaysAvailable: matching.some(prerequisite => prerequisite.alwaysAvailable),
+                  acceptedRanges: acceptedRanges
+                };
+              });
+              return {
+                start: eorzeaTime.toEarth(preparationStart),
+                end: eorzeaTime.toEarth(+range.end),
+                targetStart: eorzeaTime.toEarth(+range.start),
+                targetEnd: eorzeaTime.toEarth(+range.end),
+                prerequisites: prerequisites
+              };
+            })
             .filter(range => range.end > startEarth && range.start < endEarth);
         rangesByFishId.set(fish.id, earthRanges);
 
@@ -305,23 +356,40 @@ let FishCalendar = function() {
     return Array.from(new Set(flattenValues(fish.bestCatchPath || []).map(itemName))).join(' -> ');
   }
 
-  function describePrerequisites(fish) {
+  function describeEorzeaTime(fish) {
+    return fish.startHour === 0 && fish.endHour === 24
+        ? 'All day ET'
+        : formatEorzeaHour(fish.startHour) + '-' + formatEorzeaHour(fish.endHour) + ' ET';
+  }
+
+  function intuitionSummary(fish) {
     if (!fish.bait || !fish.bait.predators || fish.bait.predators.length === 0) return '';
-    return fish.bait.predators.map(predator => predator.count + ' x ' + predator.name).join(', ');
+    return fish.bait.predators
+        .map(predator => predator.count + 'x ' + predator.name)
+        .join(' + ');
   }
 
   function buildPlannerEvent(fish, range) {
     const locationParts = [fish.location.zoneName, fish.location.name].filter(Boolean);
-    const description = [
-      'Eorzea time: ' + (fish.startHour === 0 && fish.endHour === 24
-          ? 'All day'
-          : formatEorzeaHour(fish.startHour) + '-' + formatEorzeaHour(fish.endHour) + ' ET'),
-      'Weather: ' + describeWeather(fish)
-    ];
+    const hasIntuition = range.prerequisites.length > 0;
+    const description = hasIntuition
+        ? ['Target: ' + fish.name + ' - ' + describeEorzeaTime(fish), 'Weather: ' + describeWeather(fish)]
+        : ['Eorzea time: ' + (fish.startHour === 0 && fish.endHour === 24
+            ? 'All day'
+            : describeEorzeaTime(fish)), 'Weather: ' + describeWeather(fish)];
     const bait = describeBait(fish);
-    const prerequisites = describePrerequisites(fish);
     if (bait) description.push('Bait: ' + bait);
-    if (prerequisites) description.push("Fisher's Intuition: " + prerequisites);
+    if (hasIntuition) {
+      description.push("Fisher's Intuition (included in event duration):");
+      range.prerequisites.forEach(prerequisite => {
+        const time = prerequisite.startHour === 0 && prerequisite.endHour === 24
+            ? 'All day ET'
+            : formatEorzeaHour(prerequisite.startHour) + '-' + formatEorzeaHour(prerequisite.endHour) + ' ET';
+        description.push(prerequisite.count + 'x ' + prerequisite.name + ' - ' + time +
+            ' - Weather: ' + prerequisite.weather);
+      });
+      description.push('The event starts when prerequisite preparation becomes possible.');
+    }
     description.push('Patch: ' + fish.patch);
 
     return {
@@ -330,6 +398,9 @@ let FishCalendar = function() {
       title: fish.name + ' window',
       start: range.start,
       end: range.end,
+      targetStart: range.targetStart,
+      targetEnd: range.targetEnd,
+      prerequisites: range.prerequisites,
       location: locationParts.join(' - '),
       description: description.join('\n')
     };
@@ -383,6 +454,13 @@ let FishCalendar = function() {
         .replace(/,/g, '\\,');
   }
 
+  function normalizeCalendarSeparators(value) {
+    return String(value)
+        .replace(/[\u2010-\u2015\u2212]/g, '-')
+        .replace(/\u00d7/g, 'x')
+        .replace(/\u2192/g, '->');
+  }
+
   function foldCalendarLine(line) {
     const folded = [];
     let current = '';
@@ -424,14 +502,14 @@ let FishCalendar = function() {
       lines.push('DTSTAMP:' + formatUtcCalendarDate(generatedAt));
       lines.push('DTSTART:' + formatUtcCalendarDate(event.start));
       lines.push('DTEND:' + formatUtcCalendarDate(event.end));
-      lines.push('SUMMARY:' + escapeCalendarText(event.title));
+      lines.push('SUMMARY:' + escapeCalendarText(normalizeCalendarSeparators(event.title)));
       if (event.location) lines.push('LOCATION:' + escapeCalendarText(event.location));
-      if (event.description) lines.push('DESCRIPTION:' + escapeCalendarText(event.description));
+      if (event.description) lines.push('DESCRIPTION:' + escapeCalendarText(normalizeCalendarSeparators(event.description)));
       if (reminderMinutes !== null) {
         lines.push('BEGIN:VALARM');
         lines.push('TRIGGER:-PT' + reminderMinutes + 'M');
         lines.push('ACTION:DISPLAY');
-        lines.push('DESCRIPTION:' + escapeCalendarText(event.title));
+        lines.push('DESCRIPTION:' + escapeCalendarText(normalizeCalendarSeparators(event.title)));
         lines.push('END:VALARM');
       }
       lines.push('END:VEVENT');
@@ -464,7 +542,10 @@ let FishCalendar = function() {
     for (const fish of catalog) {
       const label = document.createElement('label');
       label.className = 'fish-choice' + (fish.alwaysAvailable ? ' is-disabled' : '');
-      label.dataset.search = [fish.name, fish.location.zoneName, fish.location.name].join(' ').toLowerCase();
+      label.dataset.search = [fish.name, fish.location.zoneName, fish.location.name]
+          .concat(fish.bait.predators.map(predator => predator.name))
+          .join(' ')
+          .toLowerCase();
       label.dataset.fishId = fish.id;
       label.dataset.patch = normalizePatchValue(fish.patch);
       label.dataset.alwaysAvailable = fish.alwaysAvailable ? 'true' : 'false';
@@ -501,6 +582,18 @@ let FishCalendar = function() {
           (fish.uptime() * 100).toFixed(1) + '</span>%';
       details.append(patch, uptime);
       text.append(name, details);
+      const intuition = intuitionSummary(fish);
+      if (intuition) {
+        const intuitionDetails = document.createElement('span');
+        intuitionDetails.className = 'fish-intuition';
+        const intuitionIcon = document.createElement('i');
+        intuitionIcon.className = 'eye icon';
+        intuitionIcon.setAttribute('aria-hidden', 'true');
+        const intuitionText = document.createElement('span');
+        intuitionText.textContent = intuition;
+        intuitionDetails.append(intuitionIcon, intuitionText);
+        text.append(intuitionDetails);
+      }
 
       label.append(checkbox, icon, text);
       fragment.append(label);
@@ -943,10 +1036,20 @@ let FishCalendar = function() {
             bar.className = 'window-bar';
             bar.style.setProperty('--window-start', ((event.start - group.interval.start) / duration * 100) + '%');
             bar.style.setProperty('--window-duration', ((event.end - event.start) / duration * 100) + '%');
-            const windowLabel = event.fishName + ', ' + formatTime(new Date(event.start)) + ' to ' +
-                formatTime(new Date(event.end)) + ', ' + event.location;
-            bar.title = windowLabel;
-            bar.setAttribute('aria-label', windowLabel);
+            const windowDetails = [
+              event.fishName,
+              'Full attempt: ' + formatTime(new Date(event.start)) + ' to ' + formatTime(new Date(event.end))
+            ];
+            if (event.prerequisites.length > 0) {
+              windowDetails.push('Target: ' + formatTime(new Date(event.targetStart)) + ' to ' +
+                  formatTime(new Date(event.targetEnd)));
+              windowDetails.push('Intuition: ' + event.prerequisites
+                  .map(prerequisite => prerequisite.count + 'x ' + prerequisite.name)
+                  .join(' + '));
+            }
+            if (event.location) windowDetails.push(event.location);
+            bar.title = windowDetails.join('\n');
+            bar.setAttribute('aria-label', windowDetails.join('. '));
             bar.tabIndex = 0;
             const barIcon = icon.cloneNode(false);
             bar.append(barIcon);
