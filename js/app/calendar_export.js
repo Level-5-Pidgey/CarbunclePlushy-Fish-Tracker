@@ -1,6 +1,7 @@
 // Shared helpers for calendar event exports.
 
 let CalendarExport = function() {
+  const REMINDER_OPTIONS = [5, 10, 15, 30, 60];
   const encoder = new TextEncoder();
 
   function pad2(value) {
@@ -151,24 +152,41 @@ let CalendarExport = function() {
     return folded.join('\r\n');
   }
 
-  function serializeICalendar(event) {
+  function serializeICalendar(events, options) {
+    const eventList = Array.isArray(events) ? events : [events];
+    const reminderMinutes = options && REMINDER_OPTIONS.includes(options.reminderMinutes)
+        ? options.reminderMinutes
+        : null;
+    const generatedAt = options && options.generatedAtMs ? options.generatedAtMs : Date.now();
     const lines = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//FFXIV Fish Tracker//Next Fish Window//EN',
-      'BEGIN:VEVENT',
-      'UID:ffxiv-fish-' + event.fishId + '-' + event.start + '@fish-tracker',
-      'DTSTAMP:' + formatUtcCalendarDate(Date.now()),
-      'DTSTART:' + formatUtcCalendarDate(event.start),
-      'DTEND:' + formatUtcCalendarDate(event.end),
-      'SUMMARY:' + escapeCalendarText(event.title)
+      'PRODID:-//FFXIV Fish Tracker//Calendar Export//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'X-WR-CALNAME:FFXIV Fishing Windows'
     ];
 
-    if (event.location) lines.push('LOCATION:' + escapeCalendarText(event.location));
-    if (event.description) {
-      lines.push('DESCRIPTION:' + escapeCalendarText(event.description));
+    for (const event of eventList) {
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:ffxiv-fish-' + event.fishId + '-' + event.start + '@fish-tracker');
+      lines.push('DTSTAMP:' + formatUtcCalendarDate(generatedAt));
+      lines.push('DTSTART:' + formatUtcCalendarDate(event.start));
+      lines.push('DTEND:' + formatUtcCalendarDate(event.end));
+      lines.push('SUMMARY:' + escapeCalendarText(normalizeCalendarSeparators(event.title)));
+      if (event.location) lines.push('LOCATION:' + escapeCalendarText(event.location));
+      if (event.description) {
+        lines.push('DESCRIPTION:' + escapeCalendarText(normalizeCalendarSeparators(event.description)));
+      }
+      if (reminderMinutes !== null) {
+        lines.push('BEGIN:VALARM');
+        lines.push('TRIGGER:-PT' + reminderMinutes + 'M');
+        lines.push('ACTION:DISPLAY');
+        lines.push('DESCRIPTION:' + escapeCalendarText(normalizeCalendarSeparators(event.title)));
+        lines.push('END:VALARM');
+      }
+      lines.push('END:VEVENT');
     }
-    lines.push('END:VEVENT');
     lines.push('END:VCALENDAR');
     return lines.map(foldCalendarLine).join('\r\n') + '\r\n';
   }
@@ -183,8 +201,8 @@ let CalendarExport = function() {
     return url.toString();
   }
 
-  function downloadICalendar(event, filename) {
-    const contents = serializeICalendar(event);
+  function downloadICalendar(events, filename, options) {
+    const contents = serializeICalendar(events, options);
     const blob = new Blob([contents], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -199,6 +217,7 @@ let CalendarExport = function() {
   return {
     buildFishEvent: buildFishEvent,
     createGoogleCalendarUrl: createGoogleCalendarUrl,
+    serializeICalendar: serializeICalendar,
     downloadICalendar: downloadICalendar
   };
 }();
