@@ -44,7 +44,7 @@ let CalendarExport = function() {
         : formatEorzeaHour(fish.startHour) + '-' + formatEorzeaHour(fish.endHour) + ' ET';
   }
 
-  function buildFishEvent(fish, targetRange, observations) {
+  function buildCalendarRange(fish, targetRange, observations) {
     if (!fish || !targetRange) {
       return null;
     }
@@ -65,16 +65,43 @@ let CalendarExport = function() {
       (earliest, observation) => Math.min(earliest, +observation.preparationStart),
       +targetRange.start
     );
-    const prerequisites = intuitionFish.map(intuition => ({
-      name: intuition.data.name,
-      count: intuition.count,
-      startHour: intuition.data.startHour,
-      endHour: intuition.data.endHour,
-      weather: describeWeather(intuition.data)
-    }));
+    const prerequisites = intuitionFish.map(intuition => {
+      const observed = matching
+          .flatMap(observation => observation.prerequisites || [])
+          .filter(prerequisite => prerequisite.fish.id === intuition.data.id);
+      return {
+        fishId: intuition.data.id,
+        name: intuition.data.name,
+        count: intuition.count,
+        startHour: intuition.data.startHour,
+        endHour: intuition.data.endHour,
+        weather: describeWeather(intuition.data),
+        alwaysAvailable: observed.some(prerequisite => prerequisite.alwaysAvailable),
+        acceptedRanges: observed
+            .filter(prerequisite => prerequisite.range !== null)
+            .map(prerequisite => ({
+              start: eorzeaTime.toEarth(+prerequisite.range.start),
+              end: eorzeaTime.toEarth(+prerequisite.range.end)
+            }))
+      };
+    });
+
+    return {
+      start: eorzeaTime.toEarth(preparationStart),
+      end: eorzeaTime.toEarth(+targetRange.end),
+      targetStart: eorzeaTime.toEarth(+targetRange.start),
+      targetEnd: eorzeaTime.toEarth(+targetRange.end),
+      prerequisites: prerequisites
+    };
+  }
+
+  function buildFishEvent(fish, calendarRange) {
+    if (!fish || !calendarRange) {
+      return null;
+    }
 
     const locationParts = [fish.location.zoneName, fish.location.name].filter(Boolean);
-    const hasIntuition = prerequisites.length > 0;
+    const hasIntuition = calendarRange.prerequisites.length > 0;
     const description = hasIntuition
         ? ['Target: ' + fish.name + ' - ' + describeEorzeaTime(fish), 'Weather: ' + describeWeather(fish)]
         : ['Eorzea time: ' + (fish.startHour === 0 && fish.endHour === 24
@@ -91,15 +118,15 @@ let CalendarExport = function() {
     }
 
     if (hasIntuition) {
-      description.push("Intuition Requirements:");
-      prerequisites.forEach(prerequisite => {
+      description.push("Fisher's Intuition (included in event duration):");
+      calendarRange.prerequisites.forEach(prerequisite => {
         const time = prerequisite.startHour === 0 && prerequisite.endHour === 24
             ? 'All day ET'
             : formatEorzeaHour(prerequisite.startHour) + '-' + formatEorzeaHour(prerequisite.endHour) + ' ET';
         description.push(prerequisite.count + 'x ' + prerequisite.name + ' - ' + time +
             ' - Weather: ' + prerequisite.weather);
       });
-      description.push('The calendar event starts when intuition fish are available.');
+      description.push('The event starts when prerequisite preparation becomes possible.');
     }
     description.push('Patch: ' + fish.patch);
 
@@ -109,10 +136,13 @@ let CalendarExport = function() {
         : fish.id;
     return {
       fishId: fishId,
+      fishName: fish.name,
       title: fish.name + ' window',
-      start: eorzeaTime.toEarth(preparationStart),
-      end: eorzeaTime.toEarth(+targetRange.end),
-      targetStart: eorzeaTime.toEarth(+targetRange.start),
+      start: calendarRange.start,
+      end: calendarRange.end,
+      targetStart: calendarRange.targetStart,
+      targetEnd: calendarRange.targetEnd,
+      prerequisites: calendarRange.prerequisites,
       location: locationParts.join(' - '),
       description: description.join('\n')
     };
@@ -222,6 +252,7 @@ let CalendarExport = function() {
   }
 
   return {
+    buildCalendarRange: buildCalendarRange,
     buildFishEvent: buildFishEvent,
     createGoogleCalendarUrl: createGoogleCalendarUrl,
     serializeICalendar: serializeICalendar,
