@@ -302,6 +302,7 @@ class FishWatcher {
     // getting set to the same value. To solve this, we'll intersect nextRange with window.
     var origNextRange = nextRange;
     nextRange = dateFns.intervalIntersection(nextRange, window);
+    var observedPrerequisites = [];
     var preparationStart = null;
 
     // If this fish has predators, we have to consider their windows too...
@@ -328,11 +329,18 @@ class FishWatcher {
           var predatorFish = intuitionFish.data;
           if (this._isFishAlwaysUp(predatorFish)) {
             atLeastOnePredatorAlwaysAvailable = true;
+            observedPrerequisites.push({
+              fish: predatorFish,
+              count: intuitionFish.count,
+              alwaysAvailable: true,
+              range: null
+            });
             return true;
           }
           predatorsAlwaysAvailable = false;
           var predWindow = null;
           var predRanges = [];
+          var observedPredRange = null;
           // Once again, we need to check if the weather right now works for
           // the predator fish.
           var iter = weatherService.findWeatherPattern(
@@ -444,6 +452,15 @@ class FishWatcher {
                 overallPredRange = mergedRange[0];
               }
             }
+            if (hasValidPredRange) observedPredRange = predRange;
+          }
+          if (hasValidPredRange) {
+            observedPrerequisites.push({
+              fish: predatorFish,
+              count: intuitionFish.count,
+              alwaysAvailable: false,
+              range: observedPredRange
+            });
           }
           return hasValidPredRange;
         }, this)
@@ -483,7 +500,8 @@ class FishWatcher {
     this.onFishCalendarTimeResolved({
       fish: fish,
       targetRange: catchableRange,
-      preparationStart: preparationStart
+      preparationStart: preparationStart,
+      prerequisites: observedPrerequisites
     });
     return dateFns.isWithinInterval(+window.end + 1, origNextRange);
   }
