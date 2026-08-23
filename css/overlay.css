@@ -1248,7 +1248,7 @@ body.calendar-planner-page .fish-choice.is-disabled { cursor: not-allowed; opaci
 body.calendar-planner-page .fish-choice.is-disabled .fish-icon { filter: grayscale(1); }
 
 body.calendar-planner-page .availability-picker { min-height: 27rem; }
-body.calendar-planner-page .schedule-axis { display: grid; grid-template-columns: repeat(4, 1fr) auto; margin: 0 .4rem .35rem 6.7rem; font-size: .72rem; opacity: .65; }
+body.calendar-planner-page .schedule-axis { display: grid; grid-template-columns: repeat(4, 1fr) auto; margin: 0 .4rem .35rem 6.7rem; font-size: .72rem; opacity: .65; white-space: nowrap; }
 body.calendar-planner-page .schedule-axis span:not(:last-child) { transform: translateX(-.15rem); }
 body.calendar-planner-page .schedule-row { display: grid; grid-template-columns: 4.5rem 1.7rem minmax(32rem, 1fr); align-items: center; min-height: 2.65rem; }
 body.calendar-planner-page .schedule-day { overflow: hidden; text-overflow: ellipsis; font-weight: 700; }
@@ -1257,7 +1257,7 @@ body.calendar-planner-page .schedule-row:hover .schedule-row-actions, body.calen
 body.calendar-planner-page .schedule-row-actions button { padding: .3rem !important; }
 body.calendar-planner-page .slot-grid { display: grid; grid-template-columns: repeat(48, minmax(6px, 1fr)); height: 1.8rem; border: 1px solid rgba(127,127,127,.32); border-radius: 4px; overflow: hidden; user-select: none; touch-action: none; }
 body.calendar-planner-page .time-slot { appearance: none; min-width: 0; padding: 0; border: 0; border-right: 1px solid var(--calendar-grid); background: transparent; cursor: crosshair; }
-body.calendar-planner-page .time-slot:nth-child(12n) { border-right-color: rgba(127,127,127,.55); }
+body.calendar-planner-page .time-slot:nth-child(12n) { border-right: 1px dashed rgba(127,127,127,.65); }
 body.calendar-planner-page .time-slot.is-selected { background: var(--calendar-slot); }
 body.calendar-planner-page .time-slot:hover, body.calendar-planner-page .time-slot:focus-visible { outline: 1px solid green; outline-offset: -1px; z-index: 1; }
 body.calendar-planner-page .schedule-legend { margin: .65rem 0 0 6.7rem; font-size: .78rem; opacity: .7; }
@@ -1306,6 +1306,7 @@ body.calendar-planner-page.dark .calendar-page .ui.form input[type="text"]:focus
 body.calendar-planner-page.dark .calendar-page input[type="search"]:focus { background-color: #1b1c1d !important; color: white !important; border-color: rgba(255,255,255,.35) !important; }
 body.calendar-planner-page.dark .calendar-page .ui.input > .icon { color: rgba(255,255,255,.65); }
 body.calendar-planner-page.dark .time-slot.is-selected { background: green; }
+body.calendar-planner-page.dark .time-slot:nth-child(12n) { border-right-color: rgba(255,255,255,.7); }
 body.calendar-planner-page.dark .window-track::before { background: hsl(0, 0%, 25%); }
 body.calendar-planner-page.dark .window-bar { background: rgb(0 128 0 / 35%); }
 body.calendar-planner-page.dark .window-bar::before { border-color: #111; background: hsl(0, 0%, 40%); }
