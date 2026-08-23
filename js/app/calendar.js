@@ -13,6 +13,7 @@ let FishCalendar = function() {
   let state = null;
   let selectedFishIds = new Set();
   let generatedEvents = [];
+  let resultSelectedEvents = new Set();
   let scheduleSlots = null;
   let dragSelection = null;
 
@@ -450,6 +451,7 @@ let FishCalendar = function() {
 
   function invalidateResults() {
     generatedEvents = [];
+    resultSelectedEvents.clear();
     document.getElementById('results-panel').hidden = true;
     document.getElementById('download-calendar').disabled = true;
   }
@@ -801,6 +803,43 @@ let FishCalendar = function() {
     const dayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
     const timeFormatter = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' });
     const formatTime = date => timeFormatter.format(date).replace(/\s?(am|pm)$/i, (_, period) => ' ' + period.toUpperCase());
+    const filters = document.getElementById('results-filters');
+    filters.replaceChildren();
+    resultSelectedEvents = new Set(result.events);
+
+    const updateResultSelection = () => {
+      const selectedEvents = generatedEvents.filter(event => resultSelectedEvents.has(event));
+      document.getElementById('results-summary').textContent = selectedEvents.length + ' event' +
+          (selectedEvents.length === 1 ? '' : 's') + ' across ' +
+          new Set(selectedEvents.map(event => event.fishId)).size + ' fish';
+      document.getElementById('download-calendar').disabled = selectedEvents.length === 0;
+    };
+
+    if (result.events.length > 0) {
+      const actions = document.createElement('div');
+      actions.className = 'ui mini buttons';
+      const selectAll = document.createElement('button');
+      selectAll.className = 'ui button';
+      selectAll.type = 'button';
+      selectAll.textContent = 'Select all days';
+      const deselectAll = document.createElement('button');
+      deselectAll.className = 'ui button';
+      deselectAll.type = 'button';
+      deselectAll.textContent = 'Deselect all days';
+      actions.append(selectAll, deselectAll);
+      const setAll = checked => {
+        resultSelectedEvents = checked ? new Set(generatedEvents) : new Set();
+        timeline.querySelectorAll('.window-row-checkbox').forEach(checkbox => { checkbox.checked = checked; });
+        timeline.querySelectorAll('.window-fish-row').forEach(row => { row.classList.toggle('is-excluded', !checked); });
+        updateResultSelection();
+      };
+      selectAll.addEventListener('click', () => setAll(true));
+      deselectAll.addEventListener('click', () => setAll(false));
+      filters.append(actions);
+      filters.hidden = false;
+    } else {
+      filters.hidden = true;
+    }
 
     if (result.events.length === 0) {
       const empty = document.createElement('div');
@@ -879,7 +918,13 @@ let FishCalendar = function() {
             .forEach(([fishId, events]) => {
           const fish = catalogById.get(fishId);
           const fishCell = document.createElement('div');
-          fishCell.className = 'window-fish';
+          fishCell.className = 'window-fish window-fish-row';
+          fishCell.dataset.fishId = fishId;
+          const include = document.createElement('input');
+          include.className = 'window-row-checkbox';
+          include.type = 'checkbox';
+          include.checked = true;
+          include.setAttribute('aria-label', 'Include ' + events[0].fishName + ' on ' + date.textContent + ' in calendar download');
           const icon = document.createElement('div');
           icon.className = 'ui middle aligned fish-icon sprite-icon sprite-icon-fish_n_tackle-' + fish.icon;
           const text = document.createElement('div');
@@ -888,10 +933,11 @@ let FishCalendar = function() {
           const location = document.createElement('small');
           location.textContent = events[0].location || 'Location unavailable';
           text.append(name, location);
-          fishCell.append(icon, text);
+          fishCell.append(include, icon, text);
 
           const track = document.createElement('div');
-          track.className = 'window-track';
+          track.className = 'window-track window-fish-row';
+          track.dataset.fishId = fishId;
           events.sort((a, b) => a.start - b.start).forEach(event => {
             const bar = document.createElement('div');
             bar.className = 'window-bar';
@@ -906,6 +952,15 @@ let FishCalendar = function() {
             bar.append(barIcon);
             track.append(bar);
           });
+          include.addEventListener('change', () => {
+            events.forEach(event => {
+              if (include.checked) resultSelectedEvents.add(event);
+              else resultSelectedEvents.delete(event);
+            });
+            fishCell.classList.toggle('is-excluded', !include.checked);
+            track.classList.toggle('is-excluded', !include.checked);
+            updateResultSelection();
+          });
           table.append(fishCell, track);
         });
         section.append(heading, table);
@@ -919,10 +974,7 @@ let FishCalendar = function() {
       noMatchList.append(item);
     }
     noMatchDetails.hidden = result.noMatchFish.length === 0;
-    document.getElementById('results-summary').textContent = result.events.length + ' event' +
-        (result.events.length === 1 ? '' : 's') + ' across ' +
-        new Set(result.events.map(event => event.fishId)).size + ' fish';
-    document.getElementById('download-calendar').disabled = result.events.length === 0;
+    updateResultSelection();
     panel.hidden = false;
     panel.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
@@ -974,8 +1026,9 @@ let FishCalendar = function() {
   }
 
   function downloadCalendar() {
-    if (generatedEvents.length === 0) return;
-    const contents = serializeICalendar(generatedEvents, {
+    const selectedEvents = generatedEvents.filter(event => resultSelectedEvents.has(event));
+    if (selectedEvents.length === 0) return;
+    const contents = serializeICalendar(selectedEvents, {
       reminderMinutes: state.reminderMinutes,
       generatedAtMs: Date.now()
     });
