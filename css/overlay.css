@@ -1216,20 +1216,20 @@ body.calendar-planner-page .results-summary { margin-top: .2rem; opacity: .7; }
 body.calendar-planner-page .availability-group { margin: 1rem 0 1.5rem; }
 body.calendar-planner-page .availability-group-heading { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .4rem; font-weight: 700; }
 body.calendar-planner-page .availability-group-heading span:last-child { font-weight: 400; opacity: .7; }
-body.calendar-planner-page .window-table { display: grid; grid-template-columns: minmax(12rem, 20rem) minmax(34rem, 1fr); overflow-x: auto; border: 1px solid var(--calendar-grid); border-radius: 10px; }
-body.calendar-planner-page .window-table-head, body.calendar-planner-page .window-fish, body.calendar-planner-page .window-track { min-height: 2.65rem; border-bottom: 1px solid var(--calendar-grid); }
+body.calendar-planner-page .window-table { display: grid; grid-template-columns: minmax(12rem, 20rem) minmax(34rem, 1fr); overflow-x: auto; overflow-y: hidden; border: 1px solid var(--calendar-grid); border-radius: 10px; }
+body.calendar-planner-page .window-table-head { min-height: 2.65rem; border-bottom: 1px solid var(--calendar-grid); }
+body.calendar-planner-page .window-fish, body.calendar-planner-page .window-track { min-height: 3.4rem; border-bottom: 1px solid var(--calendar-grid); }
 body.calendar-planner-page .window-table-head { display: flex; align-items: center; padding: .45rem .7rem; font-weight: 700; background: rgba(127,127,127,.08); }
-body.calendar-planner-page .window-axis { position: relative; min-width: 34rem; background: linear-gradient(to right, transparent calc(25% - 1px), var(--calendar-grid) 25%, transparent calc(25% + 1px), transparent calc(50% - 1px), var(--calendar-grid) 50%, transparent calc(50% + 1px), transparent calc(75% - 1px), var(--calendar-grid) 75%, transparent calc(75% + 1px)); }
+body.calendar-planner-page .window-axis { position: relative; min-width: 34rem; }
 body.calendar-planner-page .window-axis-labels { position: absolute; inset: .6rem .5rem auto; display: flex; justify-content: space-between; font-size: .72rem; font-weight: 700; opacity: .82; }
 body.calendar-planner-page .window-fish { display: grid; grid-template-columns: 28px minmax(0,1fr); align-items: center; padding: .2rem .7rem; }
 body.calendar-planner-page .window-fish .fish-icon { width: 44px; height: 44px; margin: -11px; transform: scale(.5); }
 body.calendar-planner-page .window-fish small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .65; }
-body.calendar-planner-page .window-track { position: relative; min-width: 34rem; background: linear-gradient(to right, transparent calc(25% - 1px), var(--calendar-grid) 25%, transparent calc(25% + 1px), transparent calc(50% - 1px), var(--calendar-grid) 50%, transparent calc(50% + 1px), transparent calc(75% - 1px), var(--calendar-grid) 75%, transparent calc(75% + 1px)); }
+body.calendar-planner-page .window-track { background-image: repeating-linear-gradient(to bottom, rgba(127,127,127,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(127,127,127,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(127,127,127,.55) 0 4px, transparent 4px 8px); background-position: 25% 0, 50% 0, 75% 0; background-repeat: no-repeat; background-size: 1px 100%; }
+body.calendar-planner-page .window-track { position: relative; min-width: 34rem; }
 body.calendar-planner-page .window-track::before { content: ''; position: absolute; left: 0; right: 0; top: calc(50% - 2px); height: 4px; border-radius: 2px; background: hsl(0, 0%, 85%); }
-body.calendar-planner-page .window-bar { position: absolute; z-index: 1; top: .3rem; bottom: .3rem; left: min(var(--window-start), calc(100% - 2.5rem)); width: max(var(--window-duration), 2.5rem); box-sizing: border-box; border-radius: 4px; background: rgb(0 128 0 / 18%); overflow: hidden; cursor: help; }
-body.calendar-planner-page .window-bar::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 2.5rem; box-sizing: border-box; border: 1px solid rgba(0,0,0,.55); border-radius: 4px; background: hsl(0, 0%, 75%); }
-body.calendar-planner-page .window-bar .fish-icon { position: absolute; z-index: 1; top: 50%; left: -.1rem; width: 44px; height: 44px; transform: translateY(-50%) scale(.5); }
-body.calendar-planner-page .window-bar-time { display: none; }
+body.calendar-planner-page .window-bar { position: absolute; z-index: 1; top: .4rem; left: min(var(--window-start), calc(100% - 3rem)); width: max(var(--window-duration), 3rem); height: 2.55rem; box-sizing: border-box; border: 1px solid rgba(0,0,0,.55); border-radius: 4px; background: hsl(0, 0%, 75%); cursor: help; }
+body.calendar-planner-page .window-bar .fish-icon { position: absolute; top: 50%; left: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%) scale(.7); }
 body.calendar-planner-page .empty-results { padding: 2rem; text-align: center; opacity: .7; }
 body.calendar-planner-page .no-match-details { margin-top: 1rem; }
 body.calendar-planner-page .no-match-details ul { columns: 3; }
@@ -1248,9 +1248,9 @@ body.calendar-planner-page.dark .calendar-page input[type="search"]:focus { back
 body.calendar-planner-page.dark .calendar-page .ui.input > .icon { color: rgba(255,255,255,.65); }
 body.calendar-planner-page.dark .time-slot.is-selected { background: green; }
 body.calendar-planner-page.dark .time-slot:nth-child(12n) { border-right-color: rgba(255,255,255,.7); }
+body.calendar-planner-page.dark .window-track { background-image: repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 4px, transparent 4px 8px), repeating-linear-gradient(to bottom, rgba(255,255,255,.55) 0 4px, transparent 4px 8px); }
 body.calendar-planner-page.dark .window-track::before { background: hsl(0, 0%, 25%); }
-body.calendar-planner-page.dark .window-bar { background: rgb(0 128 0 / 35%); }
-body.calendar-planner-page.dark .window-bar::before { border-color: #111; background: hsl(0, 0%, 40%); }
+body.calendar-planner-page.dark .window-bar { border-color: #111; background: hsl(0, 0%, 40%); }
 
 @media (min-width: 768px) and (max-width: 1199px) {
   body.calendar-planner-page .schedule-row { grid-template-columns: 4.5rem 1.7rem minmax(18rem, 1fr); }
