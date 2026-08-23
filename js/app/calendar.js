@@ -6,7 +6,6 @@ let FishCalendar = function() {
   const REMINDER_OPTIONS = [null, 5, 10, 15, 30, 60];
   const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const encoder = new TextEncoder();
 
   let catalog = [];
   let catalogById = new Map();
@@ -440,82 +439,6 @@ let FishCalendar = function() {
         .filter(Boolean)
         .sort((a, b) => a.name.localeCompare(b.name));
     return { events: events, noMatchFish: noMatchFish };
-  }
-
-  function formatUtcCalendarDate(timestamp) {
-    return new Date(timestamp).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  }
-
-  function escapeCalendarText(value) {
-    return String(value)
-        .replace(/\\/g, '\\\\')
-        .replace(/\r?\n/g, '\\n')
-        .replace(/;/g, '\\;')
-        .replace(/,/g, '\\,');
-  }
-
-  function normalizeCalendarSeparators(value) {
-    return String(value)
-        .replace(/[\u2010-\u2015\u2212]/g, '-')
-        .replace(/\u00d7/g, 'x')
-        .replace(/\u2192/g, '->');
-  }
-
-  function foldCalendarLine(line) {
-    const folded = [];
-    let current = '';
-    let currentBytes = 0;
-    for (const character of line) {
-      const characterBytes = encoder.encode(character).length;
-      const byteLimit = folded.length === 0 ? 75 : 74;
-      if (current && currentBytes + characterBytes > byteLimit) {
-        folded.push(current);
-        current = ' ' + character;
-        currentBytes = 1 + characterBytes;
-      } else {
-        current += character;
-        currentBytes += characterBytes;
-      }
-    }
-    if (current) folded.push(current);
-    return folded.join('\r\n');
-  }
-
-  /** Serialize PlannerEvent objects to one RFC 5545-style iCalendar file. */
-  function serializeICalendar(events, options) {
-    const reminderMinutes = options && REMINDER_OPTIONS.includes(options.reminderMinutes)
-        ? options.reminderMinutes
-        : null;
-    const generatedAt = options && options.generatedAtMs ? options.generatedAtMs : Date.now();
-    const lines = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//FFXIV Fish Tracker//Big Fish Calendar Planner//EN',
-      'CALSCALE:GREGORIAN',
-      'METHOD:PUBLISH',
-      'X-WR-CALNAME:FFXIV Fishing Windows'
-    ];
-
-    for (const event of events) {
-      lines.push('BEGIN:VEVENT');
-      lines.push('UID:ffxiv-fish-' + event.fishId + '-' + event.start + '@local-planner');
-      lines.push('DTSTAMP:' + formatUtcCalendarDate(generatedAt));
-      lines.push('DTSTART:' + formatUtcCalendarDate(event.start));
-      lines.push('DTEND:' + formatUtcCalendarDate(event.end));
-      lines.push('SUMMARY:' + escapeCalendarText(normalizeCalendarSeparators(event.title)));
-      if (event.location) lines.push('LOCATION:' + escapeCalendarText(event.location));
-      if (event.description) lines.push('DESCRIPTION:' + escapeCalendarText(normalizeCalendarSeparators(event.description)));
-      if (reminderMinutes !== null) {
-        lines.push('BEGIN:VALARM');
-        lines.push('TRIGGER:-PT' + reminderMinutes + 'M');
-        lines.push('ACTION:DISPLAY');
-        lines.push('DESCRIPTION:' + escapeCalendarText(normalizeCalendarSeparators(event.title)));
-        lines.push('END:VALARM');
-      }
-      lines.push('END:VEVENT');
-    }
-    lines.push('END:VCALENDAR');
-    return lines.map(foldCalendarLine).join('\r\n') + '\r\n';
   }
 
   function parseEndDateToExclusiveTimestamp(value) {
@@ -1134,19 +1057,10 @@ let FishCalendar = function() {
   function downloadCalendar() {
     const selectedEvents = generatedEvents.filter(event => resultSelectedEvents.has(event));
     if (selectedEvents.length === 0) return;
-    const contents = serializeICalendar(selectedEvents, {
+    CalendarExport.downloadICalendar(selectedEvents, 'ffxiv-fishing-' + state.endDate + '.ics', {
       reminderMinutes: state.reminderMinutes,
       generatedAtMs: Date.now()
     });
-    const blob = new Blob([contents], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'ffxiv-fishing-' + state.endDate + '.ics';
-    document.body.append(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function resetPlanner() {
@@ -1279,7 +1193,6 @@ let FishCalendar = function() {
 
   return {
     calculateFishRangesUntil: calculateFishRangesUntil,
-    generatePlannerEvents: generatePlannerEvents,
-    serializeICalendar: serializeICalendar
+    generatePlannerEvents: generatePlannerEvents
   };
 }();
