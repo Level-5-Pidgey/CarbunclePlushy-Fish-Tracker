@@ -130,6 +130,13 @@ let CalendarExport = function() {
         .replace(/,/g, '\\,');
   }
 
+  function normalizeCalendarSeparators(value) {
+    return String(value)
+        .replace(/[\u2010-\u2015\u2212]/g, '-')
+        .replace(/\u00d7/g, 'x')
+        .replace(/\u2192/g, '->');
+  }
+
   function foldCalendarLine(line) {
     const folded = [];
     let current = '';
